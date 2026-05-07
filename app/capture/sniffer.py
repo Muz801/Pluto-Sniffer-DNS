@@ -1,18 +1,35 @@
 from scapy.all import sniff, get_if_list
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.dns import DNS
-import time
 from collections import defaultdict
+import time
+from collections import defaultdict, deque
+from app.storage.database import save_metrics
+from datetime import datetime
 
 
-# Packet counter
+# Packet metrics
 packet_count = 0
+dns_requests = 0
 
-# Track packet rate
+# Protocol counters
+protocol_counter = defaultdict(int)
+
+# Unique IP tracker
+unique_ips = set()
+
+# Track packets/sec
 start_time = time.time()
+
+# Track top talkers
+ip_counter = defaultdict(int)
+
+# Temporary packet buffer
+packet_buffer = deque(maxlen=1000)
 
 # List available network interfaces
 def detect_interface():
+
     interfaces = get_if_list()
 
     print("\nAvailable interfaces:\n")
@@ -28,70 +45,88 @@ def detect_interface():
 
     return chosen_interface
 
-
-# Process captured packets
 def process_packet(packet):
 
     global packet_count
+    global dns_requests
     global start_time
 
-    # Count packets
     packet_count += 1
+    packet_buffer.append(packet)
 
-    # Calculate packets per second
-    elapsed_time = time.time() - start_time
-
-    if elapsed_time >= 1:
-
-        print(f"\n[METRICS] Packets/sec: {packet_count}")
-
-        packet_count = 0
-        start_time = time.time()
-
-    # Check IP layer
+    # ===== IP LAYER =====
     if packet.haslayer(IP):
 
-        # Extract source IP
         src_ip = packet[IP].src
-
-        # Extract destination IP
         dst_ip = packet[IP].dst
 
-        print(f"\n[IP]")
-        print(f"Source IP: {src_ip}")
-        print(f"Destination IP: {dst_ip}")
+        unique_ips.add(src_ip)
+        unique_ips.add(dst_ip)
 
-    # Check TCP layer
+        ip_counter[src_ip] += 1
+
+    # ===== TCP LAYER =====
     if packet.haslayer(TCP):
 
-        # Extract ports
-        src_port = packet[TCP].sport
-        dst_port = packet[TCP].dport
+        protocol_counter["TCP"] += 1
 
-        print(f"[TCP]")
-        print(f"Source Port: {src_port}")
-        print(f"Destination Port: {dst_port}")
-
-        # Detect SYN packets
+    # Detect SYN
         if packet[TCP].flags == "S":
+            pass  # (luego puedes alertar aquí)
 
-            print("[ALERT] SYN packet detected")
-
-    # Check UDP layer
+    # ===== UDP LAYER =====
     if packet.haslayer(UDP):
 
-        # Extract ports
-        src_port = packet[UDP].sport
-        dst_port = packet[UDP].dport
+        protocol_counter["UDP"] += 1
 
-        print(f"[UDP]")
-        print(f"Source Port: {src_port}")
-        print(f"Destination Port: {dst_port}")
-
-    # Check DNS layer
+    # ===== DNS LAYER =====
     if packet.haslayer(DNS):
 
-        print("[DNS] DNS packet detected")
+        protocol_counter["DNS"] += 1
+        dns_requests += 1
+
+    # ===== TIME WINDOW =====
+    elapsed_time = time.time() - start_time
+
+    if elapsed_time >= 5:
+
+        metrics = {
+            "timestamp": datetime.now().isoformat(),
+            "packet_count": packet_count,
+            "dns_requests": dns_requests,
+            "unique_ips": len(unique_ips),
+            "protocols": dict(protocol_counter),
+            "top_talkers": dict(ip_counter)
+        }
+
+        save_metrics(metrics)
+
+
+        print("\n========== METRICS (5s WINDOW) ==========")
+
+        print(f"Packets: {packet_count}")
+        print(f"DNS Requests: {dns_requests}")
+        print(f"Unique IPs: {len(unique_ips)}")
+
+        print("\nProtocols:")
+        for protocol, count in protocol_counter.items():
+            print(f"  - {protocol}: {count}")
+
+        print("\nTop Talkers:")
+        top_talkers = sorted(ip_counter.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        for ip, count in top_talkers:
+            print(f"  - {ip}: {count} packets")
+
+        print("=========================================\n")
+
+        packet_count = 0
+        dns_requests = 0
+        protocol_counter.clear()
+        unique_ips.clear()
+        ip_counter.clear()
+
+        start_time = time.time()
 
 
 # Start packet sniffing
