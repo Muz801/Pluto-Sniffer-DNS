@@ -1,0 +1,44 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# SQLite databases
+*.db
+
+# CSV exports
+*.csv
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# Docker
+docker-data/
+
+# pytest
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Models
+*.pkl
+
+# Temporary files
+tmp/
+temp/
