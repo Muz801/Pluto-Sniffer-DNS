@@ -14,32 +14,58 @@ query = "SELECT * FROM metrics"
 
 df = pd.read_sql_query(query, conn)
 
-print("\n===== THRESHOLD DETECTION =====\n")
+print("\n===== TRAFFIC ANALYSIS =====\n")
 
-# Thresholds básicos
-PACKET_THRESHOLD = 1000
-DNS_THRESHOLD = 50
-UNIQUE_IP_THRESHOLD = 30
+# ==============================
+# ROLLING AVERAGE
+# ==============================
+
+# Media móvil de packet_count
+df["rolling_avg"] = df["packet_count"].rolling(window=10).mean()
+
+# ==============================
+# Z-SCORE
+# ==============================
+
+# Media global
+mean_packets = df["packet_count"].mean()
+
+# Desviación estándar
+std_packets = df["packet_count"].std()
+
+# Calcular z-score
+df["z_score"] = (
+    (df["packet_count"] - mean_packets)
+    / std_packets
+)
+
+# ==============================
+# DETECTAR SPIKES
+# ==============================
+
+# Threshold z-score
+Z_THRESHOLD = 3
 
 # Detectar anomalías
-anomalies = df[
-    (df["packet_count"] > PACKET_THRESHOLD) |
-    (df["dns_requests"] > DNS_THRESHOLD) |
-    (df["unique_ips"] > UNIQUE_IP_THRESHOLD)
-]
+spikes = df[df["z_score"] > Z_THRESHOLD]
 
-# Mostrar anomalías
-if anomalies.empty:
+# ==============================
+# RESULTADOS
+# ==============================
 
-    print("No anomalies detected.")
+print("\n===== SPIKES DETECTED =====\n")
+
+if spikes.empty:
+
+    print("No traffic spikes detected.")
 
 else:
 
-    print(anomalies[[
+    print(spikes[[
         "timestamp",
         "packet_count",
-        "dns_requests",
-        "unique_ips"
+        "rolling_avg",
+        "z_score"
     ]])
 
-    print(f"\nTotal anomalies detected: {len(anomalies)}")
+    print(f"\nTotal spikes detected: {len(spikes)}")
