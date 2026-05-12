@@ -2,7 +2,7 @@ import sqlite3
 import csv
 import json
 import os
-
+from app.utils.logger import logger
 # 📍 Ruta a la base de datos (SIEMPRE la de storage)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "network_traffic.db")
@@ -48,4 +48,4 @@ with open(csv_file, "w", newline="") as file:
             json.loads(row[6]) if row[6] else {}
         ])
 
-print(f"CSV exported successfully → {csv_file}")
+logger.info(f"CSV exported successfully → {csv_file}")

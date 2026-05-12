@@ -1,7 +1,7 @@
 import sqlite3
 import pandas as pd
 import os
-
+from app.utils.logger import logger
 # Ruta absoluta a la base de datos
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "../storage/network_traffic.db")
@@ -16,13 +16,13 @@ query = "SELECT * FROM metrics"
 df = pd.read_sql_query(query, conn)
 
 # Mostrar DataFrame
-print("\n===== DATAFRAME =====\n")
-print(df)
+logger.info("\n===== DATAFRAME =====\n")
+logger.info(df)
 
 # Mostrar información general
-print("\n===== DATAFRAME INFO =====\n")
-print(df.info())
+logger.info("\n===== DATAFRAME INFO =====\n")
+logger.info(df.info())
 
 # Mostrar estadísticas básicas
-print("\n===== DATAFRAME STATS =====\n")
-print(df.describe())
+logger.info("\n===== DATAFRAME STATS =====\n")
+logger.info(df.describe())

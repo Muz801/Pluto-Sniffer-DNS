@@ -4,11 +4,13 @@ import requests
 from datetime import datetime
 from colorama import Fore, Style, init
 
+from config import SLACK_WEBHOOK_URL
+from app.utils.logger import logger
 # Initialize colorama
 init(autoreset=True)
 
 # Slack webhook URL
-SLACK_WEBHOOK_URL = ""
+SLACK_WEBHOOK_URL = SLACK_WEBHOOK_URL
 # ==============================
 # Structured log
 # ==============================
@@ -30,38 +32,31 @@ def structured_log(anomaly_data):
 
 def console_alert(anomaly_data):
 
-    print(
-        Fore.RED +
+    logger.warning(
         "\n===== ANOMALY ALERT ====="
     )
 
-    print(
-        Fore.YELLOW +
+    logger.warning(
         f"Timestamp: {anomaly_data['timestamp']}"
     )
 
-    print(
-        Fore.CYAN +
+    logger.warning(
         f"Packet Count: {anomaly_data['packet_count']}"
     )
 
-    print(
-        Fore.CYAN +
+    logger.warning(
         f"DNS Requests: {anomaly_data['dns_requests']}"
     )
 
-    print(
-        Fore.CYAN +
+    logger.warning(
         f"Unique IPs: {anomaly_data['unique_ips']}"
     )
 
-    print(
-        Fore.GREEN +
+    logger.warning(
         f"Traffic Label: {anomaly_data['traffic_label']}"
     )
 
-    print(
-        Fore.RED +
+    logger.warning(
         "===========================\n"
     )
 
@@ -73,15 +68,12 @@ def json_alert(anomaly_data):
 
     log = structured_log(anomaly_data)
 
-    print(
-        Fore.MAGENTA +
-        "\n===== JSON ALERT =====\n"
+    logger.warning("\n===== JSON ALERT =====\n"
     )
 
-    print(json.dumps(log, indent=4))
+    logger.warning(json.dumps(log, indent=4))
 
-    print(
-        Fore.MAGENTA +
+    logger.warning(
         "\n======================\n"
     )
 
@@ -112,15 +104,13 @@ def slack_alert(anomaly_data):
 
     if response.status_code == 200:
 
-        print(
-            Fore.GREEN +
-            "Slack alert sent successfully."
+        logger.info(
+           "Slack alert sent successfully."
         )
 
     else:
 
-        print(
-            Fore.RED +
+        logger.error(
             f"Slack webhook error: "
             f"{response.status_code}"
         )

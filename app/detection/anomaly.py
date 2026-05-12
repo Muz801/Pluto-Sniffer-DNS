@@ -2,7 +2,7 @@ import sqlite3
 import pandas as pd
 import os
 import json
-
+from app.utils.logger import logger
 # Ruta DB
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "../storage/network_traffic.db")
@@ -15,7 +15,7 @@ query = "SELECT * FROM metrics"
 
 df = pd.read_sql_query(query, conn)
 
-print("\n===== NETWORK ANOMALY DETECTION =====\n")
+logger.info("\n===== NETWORK ANOMALY DETECTION =====\n")
 
 # ==============================
 # EXTRAER FEATURES NUMÉRICAS
@@ -45,22 +45,22 @@ threshold_anomalies = df[
     (df["unique_ips"] > UNIQUE_IP_THRESHOLD)
 ]
 
-print("\n===== THRESHOLD ANOMALIES =====\n")
+logger.warning("\n===== THRESHOLD ANOMALIES =====\n")
 
 if threshold_anomalies.empty:
 
-    print("No threshold anomalies detected.")
+    logger.info("No threshold anomalies detected.")
 
 else:
 
-    print(threshold_anomalies[[
+    logger.warning(threshold_anomalies[[
         "timestamp",
         "packet_count",
         "dns_requests",
         "unique_ips"
     ]])
 
-    print(
+    logger.warning(
         f"\nTotal threshold anomalies: "
         f"{len(threshold_anomalies)}"
     )
@@ -98,22 +98,22 @@ spikes = df[
     df["z_score"] > Z_THRESHOLD
 ]
 
-print("\n===== TRAFFIC SPIKES =====\n")
+logger.warning("\n===== TRAFFIC SPIKES =====\n")
 
 if spikes.empty:
 
-    print("No traffic spikes detected.")
+    logger.info("No traffic spikes detected.")
 
 else:
 
-    print(spikes[[
+    logger.warning(spikes[[
         "timestamp",
         "packet_count",
         "rolling_avg",
         "z_score"
     ]])
 
-    print(f"\nTotal spikes detected: {len(spikes)}")
+    logger.warning(f"\nTotal spikes detected: {len(spikes)}")
 
 # ==============================
 # DNS FLOOD DETECTION
@@ -125,21 +125,21 @@ dns_floods = df[
     df["dns_requests"] > DNS_FLOOD_THRESHOLD
 ]
 
-print("\n===== DNS FLOODS =====\n")
+logger.warning("\n===== DNS FLOODS =====\n")
 
 if dns_floods.empty:
 
-    print("No DNS floods detected.")
+    logger.info("No DNS floods detected.")
 
 else:
 
-    print(dns_floods[[
+    logger.warning(dns_floods[[
         "timestamp",
         "dns_requests",
         "packet_count"
     ]])
 
-    print(f"\nTotal DNS floods: {len(dns_floods)}")
+    logger.warning(f"\nTotal DNS floods: {len(dns_floods)}")
 
 # ==============================
 # SYN FLOOD DETECTION
@@ -151,18 +151,18 @@ syn_floods = df[
     df["tcp_count"] > SYN_THRESHOLD
 ]
 
-print("\n===== SYN FLOODS =====\n")
+logger.warning("\n===== SYN FLOODS =====\n")
 
 if syn_floods.empty:
 
-    print("No SYN floods detected.")
+    logger.info("No SYN floods detected.")
 
 else:
 
-    print(syn_floods[[
+    logger.warning(syn_floods[[
         "timestamp",
         "tcp_count",
         "packet_count"
     ]])
 
-    print(f"\nTotal SYN floods: {len(syn_floods)}")
+    logger.warning(f"\nTotal SYN floods: {len(syn_floods)}")

@@ -6,7 +6,7 @@ import time
 from collections import defaultdict, deque
 from app.storage.database import save_metrics
 from datetime import datetime
-
+from app.utils.logger import logger
 
 # Packet metrics
 packet_count = 0
@@ -32,16 +32,16 @@ def detect_interface():
 
     interfaces = get_if_list()
 
-    print("\nAvailable interfaces:\n")
+    logger.info("Available interfaces:")
 
     for index, interface in enumerate(interfaces):
-        print(f"{index}: {interface}")
+        logger.info(f"{index}: {interface}")
 
-    selected = input("\nSelect interface number: ")
+    selected = input("Select interface number: ")
 
     chosen_interface = interfaces[int(selected)]
 
-    print(f"\nUsing interface: {chosen_interface}")
+    logger.info(f"Using interface: {chosen_interface}")
 
     return chosen_interface
 
@@ -102,23 +102,23 @@ def process_packet(packet):
         save_metrics(metrics)
 
 
-        print("\n========== METRICS (5s WINDOW) ==========")
+        logger.info("========== METRICS (5s WINDOW) ==========")
 
-        print(f"Packets: {packet_count}")
-        print(f"DNS Requests: {dns_requests}")
-        print(f"Unique IPs: {len(unique_ips)}")
+        logger.info(f"Packets: {packet_count}")
+        logger.info(f"DNS Requests: {dns_requests}")
+        logger.info(f"Unique IPs: {len(unique_ips)}")
 
-        print("\nProtocols:")
+        logger.info("Protocols:")
         for protocol, count in protocol_counter.items():
-            print(f"  - {protocol}: {count}")
+            logger.info(f"  - {protocol}: {count}")
 
-        print("\nTop Talkers:")
+        logger.info("Top Talkers:")
         top_talkers = sorted(ip_counter.items(), key=lambda x: x[1], reverse=True)[:5]
 
         for ip, count in top_talkers:
-            print(f"  - {ip}: {count} packets")
+            logger.info(f"  - {ip}: {count} packets")
 
-        print("=========================================\n")
+        logger.info("=========================================")
 
         packet_count = 0
         dns_requests = 0
@@ -132,7 +132,7 @@ def process_packet(packet):
 # Start packet sniffing
 def start_sniffer(interface):
 
-    print(f"\nSniffing on interface: {interface}\n")
+    logger.info(f"Sniffing on interface: {interface}")
 
     sniff(
         iface=interface,

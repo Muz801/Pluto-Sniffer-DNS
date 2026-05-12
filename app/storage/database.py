@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import json
+from app.utils.logger import logger
 
 # Ruta ABSOLUTA a storage/
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -9,7 +10,7 @@ DB_PATH = os.path.join(BASE_DIR, "network_traffic.db")
 conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 cursor = conn.cursor()
 
-print("USING DB:", DB_PATH)
+logger.info("USING DB:", DB_PATH)
 
 
 def save_metrics(metrics):
